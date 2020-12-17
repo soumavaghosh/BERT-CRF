@@ -2,12 +2,14 @@ import config
 import pickle
 import dataset
 import torch
+import tqdm
 from transformers import AdamW
 from transformers import get_linear_schedule_with_warmup
 import warnings
 import engine
 import numpy as np
 from model import *
+from crf_model import *
 warnings.filterwarnings('ignore')
 
 def read_data(name):
@@ -25,15 +27,16 @@ def read_data(name):
 train_data, test_data, valid_data, n_tags = read_data(config.DATASET)
 
 train_dataset = dataset.EntityDataset(train_data)
-train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_size=config.TRAIN_BATCH_SIZE, num_workers=-1)
+train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_size=config.TRAIN_BATCH_SIZE, num_workers=1)
 
 test_dataset = dataset.EntityDataset(test_data)
-test_data_loader = torch.utils.data.DataLoader(test_dataset, batch_size=config.TRAIN_BATCH_SIZE, num_workers=-1)
+test_data_loader = torch.utils.data.DataLoader(test_dataset, batch_size=config.TRAIN_BATCH_SIZE, num_workers=1)
 
 valid_dataset = dataset.EntityDataset(valid_data)
-valid_data_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=config.TRAIN_BATCH_SIZE, num_workers=-1)
+valid_data_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=config.TRAIN_BATCH_SIZE, num_workers=1)
 
-model = EntityModel(num_tag=n_tags)
+model = EntityModel_crf(num_tag=n_tags)
+print(model)
 model.to(config.DEVICE)
 
 param_optimizer = list(model.named_parameters())
@@ -61,10 +64,12 @@ scheduler = get_linear_schedule_with_warmup(
 
 best_loss = np.inf
 for epoch in range(config.EPOCHS):
-    train_loss, train_acc = engine.train_fn(train_data_loader, model, optimizer, config.DEVICE, scheduler)
-    test_loss, test_acc = engine.eval_fn(valid_data_loader, model, config.DEVICE)
+    train_loss = engine.train_fn_crf(train_data_loader, model, optimizer, config.DEVICE, scheduler)
+    test_loss, test_f1, test_acc = engine.eval_fn_crf(valid_data_loader, model, config.DEVICE)
     print(f"Train Loss = {train_loss} Valid Loss = {test_loss}")
-    print(f"Train Acc = {train_acc} Valid Acc = {test_acc}")
+    print(f"Test F1 = {test_f1} Test acc = {test_acc}")
+    #print(f"Train F1 = {train_f1} Valid F1 = {test_f1}")
     if test_loss < best_loss:
         torch.save(model.state_dict(), config.MODEL_PATH)
         best_loss = test_loss
+
