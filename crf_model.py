@@ -74,8 +74,6 @@ class EntityModel_crf(nn.Module):
         target_tag = torch.where(active_loss, target_tag, torch.ones(target_tag.shape).type_as(target_tag)*-1)
         return dp_ind, max_idx_n, max_pos, target_tag
 
-
-
     def forward(self, ids, mask, token_type_ids, target_tag):
         o1, _ = self.bert(ids, attention_mask=mask, token_type_ids=token_type_ids)
         bo_tag = self.bert_drop(o1)

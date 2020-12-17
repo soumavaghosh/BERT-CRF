@@ -50,7 +50,7 @@ def backtrack(mat, ind):
     _, sent_length = mat.shape
     for i in range(sent_length-1, 0, -1):
         seq.append(mat[seq[-1],i])
-    return seq
+    return seq[::-1]
 
 
 def mat2seq(dp_ind, max_idx_n, max_pos):
