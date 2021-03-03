@@ -35,8 +35,8 @@ test_data_loader = torch.utils.data.DataLoader(test_dataset, batch_size=config.T
 valid_dataset = dataset.EntityDataset(valid_data)
 valid_data_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=config.TRAIN_BATCH_SIZE, num_workers=1)
 
-#model = EntityModel_crf(num_tag=n_tags)
-model = torch.load('model.pt')
+model = EntityModel_crf(num_tag=n_tags)
+#model = torch.load('model.pt')
 print(model)
 model.to(config.DEVICE)
 
@@ -72,4 +72,3 @@ for epoch in range(config.EPOCHS):
     if test_loss < best_loss:
         torch.save(model, config.MODEL_PATH)
         best_loss = test_loss
-
